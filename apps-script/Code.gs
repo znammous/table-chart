@@ -4,7 +4,8 @@
 var PARENT_PASSWORD = '12345';   // كلمة سر ولي الأمر — غيّرها من هنا متى شئت
 var KEEP_DAYS = 45;              // التسجيلات الأقدم من هذا تُمسح تلقائياً
 var NAMES = ['غنون', 'ملوك'];
-var MEALS = ['فطور', 'غداء'];
+var MEALS = ['فطور', 'غداء', 'مسح خفيف'];
+var REPEATABLE = ['مسح خفيف'];  // يمكن تسجيله أكثر من مرة في اليوم
 var SHEET_NAME = 'Entries';
 
 function getSheet_() {
@@ -73,7 +74,7 @@ function doPost(e) {
       if (NAMES.indexOf(body.name) < 0 || MEALS.indexOf(body.meal) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
         return json_({ ok: false, error: 'بيانات غير صحيحة' });
       }
-      var taken = readAll_(sheet).some(function (r) { return r.date === body.date && r.meal === body.meal; });
+      var taken = REPEATABLE.indexOf(body.meal) < 0 && readAll_(sheet).some(function (r) { return r.date === body.date && r.meal === body.meal; });
       if (taken) return json_({ ok: false, error: 'هذه الوجبة مسجلة مسبقاً في هذا التاريخ' });
       var row = sheet.getLastRow() + 1;
       sheet.getRange(row, 1, 1, 6).setNumberFormat('@').setValues([[

@@ -9,7 +9,7 @@
     --pink: #c2457d; --pink-soft: #fff4f9; --pink-line: #efc6da;
     --purple: #7a4fa3; --purple-soft: #f6f0fb; --purple-line: #dccbee;
     --ink: #3a2a3a; --muted: #8a7a8a; --ok: #2f8f5b; --ok-soft: #e6f5ec;
-    --wait: #b7791f; --wait-soft: #fdf3e1; --bg: #fdfafc; --card: #ffffff;
+    --wait: #b7791f; --wait-soft: #fdf3e1; --bg: #fdfafc; --teal: #2b8a8a; --teal-line: #bfe3e3; --card: #ffffff;
   }
   * { box-sizing: border-box; }
   body {
@@ -17,7 +17,7 @@
     font-family: "Geeza Pro", "Al Bayan", "Segoe UI", Tahoma, Arial, sans-serif;
     font-size: 17px;
   }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
   header {
     text-align: center; padding: 18px 12px; border: 2px dashed #e58fb5;
     border-radius: 18px; background: var(--pink-soft); margin-bottom: 16px;
@@ -48,12 +48,17 @@
   .msg { margin-top: 12px; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; display: none; }
   .msg.ok { display: block; background: var(--ok-soft); color: var(--ok); }
   .msg.err { display: block; background: #fdecec; color: #b42318; }
-  .tables { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+  .tables { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  @media (max-width: 1100px) { .tables { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
   @media (max-width: 720px) { .tables { grid-template-columns: minmax(0,1fr); } }
   @media (max-width: 480px) { .wrap { padding: 16px 10px; } .card { padding: 14px 10px; } table { font-size: 13px; } h1 { font-size: 24px; } }
   table { width: 100%; border-collapse: collapse; font-size: 15px; }
   th { background: var(--pink); color: #fff; padding: 8px 6px; font-weight: bold; }
   .lunch th { background: var(--purple); }
+  .light th { background: var(--teal); }
+  .light td { border-color: var(--teal-line); }
+  .light h2 { color: var(--teal); }
+  .meal .choice.on:nth-child(3) { border-color: var(--teal); background: var(--teal); color: #fff; }
   td { border-bottom: 1px solid var(--pink-line); padding: 8px 6px; text-align: center; }
   .lunch td { border-color: var(--purple-line); }
   td.date { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
@@ -95,7 +100,7 @@
     <div class="label">التاريخ</div>
     <input type="date" id="date">
 
-    <div class="label">الوجبة</div>
+    <div class="label">نوع المسح</div>
     <div class="choices meal" id="meals"></div>
 
     <button class="submit" id="submit">✅ مسحت الطاولة</button>
@@ -110,6 +115,10 @@
     <section class="card lunch">
       <h2>🍲 الغداء</h2>
       <table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-غداء"></tbody></table>
+    </section>
+    <section class="card light">
+      <h2>🧽 المسح الخفيف</h2>
+      <table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-مسح خفيف"></tbody></table>
     </section>
   </div>
   <footer>تُحذف التسجيلات تلقائياً بعد 45 يوماً</footer>
@@ -129,7 +138,7 @@
   var API_URL = "https://script.google.com/macros/s/AKfycbxJGBpvOwYnJDE3Vq-oixvH_Xfw5LdQPAAsHITnE6U8ifqplXpeLPG_8q5TpFDsj8MQ/exec";
 
   var NAMES = ["غنون", "ملوك"];
-  var MEALS = ["فطور", "غداء"];
+  var MEALS = ["فطور", "غداء", "مسح خفيف"];
   var DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
   var state = { name: null, meal: null, entries: [], password: null };
 
@@ -191,7 +200,7 @@
     var date = $("date").value;
     if (!state.name) return flash("اختاري اسمك أولاً", false);
     if (!date) return flash("اختاري التاريخ", false);
-    if (!state.meal) return flash("اختاري الوجبة", false);
+    if (!state.meal) return flash("اختاري نوع المسح", false);
     if (!API_URL) return flash("الصفحة غير مربوطة بجدول Google بعد", false);
     var btn = this; btn.disabled = true;
     api({ action: "add", name: state.name, date: date, meal: state.meal })
