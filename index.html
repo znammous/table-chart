@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جدول مسح الطاولة</title>
+<style>
+  :root {
+    --pink: #c2457d; --pink-soft: #fff4f9; --pink-line: #efc6da;
+    --purple: #7a4fa3; --purple-soft: #f6f0fb; --purple-line: #dccbee;
+    --ink: #3a2a3a; --muted: #8a7a8a; --ok: #2f8f5b; --ok-soft: #e6f5ec;
+    --wait: #b7791f; --wait-soft: #fdf3e1; --bg: #fdfafc; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Geeza Pro", "Al Bayan", "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 17px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  header {
+    text-align: center; padding: 18px 12px; border: 2px dashed #e58fb5;
+    border-radius: 18px; background: var(--pink-soft); margin-bottom: 16px;
+  }
+  h1 { margin: 0; color: var(--pink); font-size: 30px; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+  .card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(122,79,163,.08); margin-bottom: 16px; }
+  .card h2 { margin: 0 0 14px; font-size: 21px; color: var(--purple); }
+  .rule { background: var(--purple-soft); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; font-size: 15px; line-height: 1.7; }
+  .label { font-weight: bold; margin: 14px 0 8px; }
+  .choices { display: flex; gap: 10px; flex-wrap: wrap; }
+  .choice {
+    flex: 1 1 110px; min-height: 64px; font: inherit; font-size: 22px; font-weight: bold;
+    border: 3px solid var(--pink-line); background: #fff; color: var(--ink);
+    border-radius: 16px; cursor: pointer;
+  }
+  .choice.on { border-color: var(--pink); background: var(--pink); color: #fff; }
+  .meal .choice.on { border-color: var(--purple); background: var(--purple); }
+  input[type=date], input[type=password] {
+    font: inherit; font-size: 20px; padding: 12px 14px; width: 100%;
+    border: 3px solid var(--pink-line); border-radius: 14px; background: #fff; color: var(--ink);
+  }
+  .submit {
+    margin-top: 18px; width: 100%; min-height: 64px; font: inherit; font-size: 23px; font-weight: bold;
+    background: var(--pink); color: #fff; border: 0; border-radius: 16px; cursor: pointer;
+  }
+  .submit:disabled { opacity: .5; cursor: default; }
+  .msg { margin-top: 12px; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; display: none; }
+  .msg.ok { display: block; background: var(--ok-soft); color: var(--ok); }
+  .msg.err { display: block; background: #fdecec; color: #b42318; }
+  .tables { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+  @media (max-width: 720px) { .tables { grid-template-columns: minmax(0,1fr); } }
+  @media (max-width: 480px) { .wrap { padding: 16px 10px; } .card { padding: 14px 10px; } table { font-size: 13px; } h1 { font-size: 24px; } }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th { background: var(--pink); color: #fff; padding: 8px 6px; font-weight: bold; }
+  .lunch th { background: var(--purple); }
+  td { border-bottom: 1px solid var(--pink-line); padding: 8px 6px; text-align: center; }
+  .lunch td { border-color: var(--purple-line); }
+  td.date { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+  .empty { color: var(--muted); padding: 16px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 13px; font-weight: bold; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.wait { background: var(--wait-soft); color: var(--wait); }
+  .mini { font: inherit; font-size: 13px; padding: 5px 9px; border-radius: 10px; border: 2px solid var(--purple-line); background: #fff; color: var(--purple); cursor: pointer; margin: 2px; }
+  .mini.del { color: #b42318; border-color: #f3c3c3; }
+  .setup { background: var(--wait-soft); color: var(--wait); border-radius: 14px; padding: 14px; margin-bottom: 16px; line-height: 1.7; display: none; }
+  dialog { border: 0; border-radius: 18px; padding: 20px; width: min(360px, 92vw); }
+  dialog::backdrop { background: rgba(58,42,58,.45); }
+  dialog h3 { margin: 0 0 12px; color: var(--purple); }
+  .row { display: flex; gap: 10px; margin-top: 14px; }
+  .row button { flex: 1; min-height: 48px; font: inherit; font-size: 18px; border-radius: 12px; border: 0; cursor: pointer; }
+  .yes { background: var(--purple); color: #fff; }
+  .no { background: #eee; color: var(--ink); }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⭐ جدول مسح الطاولة ⭐</h1>
+    <p>سجّلي بعد ما تمسحين الطاولة، وولي الأمر يوافق</p>
+  </header>
+
+  <div class="setup" id="setup">
+    الصفحة غير مربوطة بجدول Google بعد. ضع رابط Apps Script في المتغير <b>API_URL</b> داخل ملف index.html (الخطوات في README).
+  </div>
+
+  <section class="card">
+    <h2>✍️ تسجيل جديد</h2>
+    <div class="rule"><b>تذكير:</b> حمل الطعام والصحون إلى المطبخ مهمة مشتركة على الجميع دائماً، وبعدها تمسح صاحبة الدور الطاولة.</div>
+
+    <div class="label">اسمي</div>
+    <div class="choices" id="names"></div>
+
+    <div class="label">التاريخ</div>
+    <input type="date" id="date">
+
+    <div class="label">الوجبة</div>
+    <div class="choices meal" id="meals"></div>
+
+    <button class="submit" id="submit">✅ مسحت الطاولة</button>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <div class="tables">
+    <section class="card">
+      <h2>🍳 الفطور</h2>
+      <table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-فطور"></tbody></table>
+    </section>
+    <section class="card lunch">
+      <h2>🍲 الغداء</h2>
+      <table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-غداء"></tbody></table>
+    </section>
+  </div>
+  <footer>تُحذف التسجيلات تلقائياً بعد 45 يوماً</footer>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dlg-title">موافقة ولي الأمر</h3>
+  <input type="password" id="pw" inputmode="numeric" placeholder="كلمة السر" autocomplete="off">
+  <div class="row">
+    <button class="yes" id="dlg-yes">تأكيد</button>
+    <button class="no" id="dlg-no">إلغاء</button>
+  </div>
+</dialog>
+
+<script>
+  // رابط Google Apps Script (Deploy → Web app) — الصقه هنا
+  var API_URL = "https://script.google.com/macros/s/AKfycbxJGBpvOwYnJDE3Vq-oixvH_Xfw5LdQPAAsHITnE6U8ifqplXpeLPG_8q5TpFDsj8MQ/exec";
+
+  var NAMES = ["غنون", "ملوك"];
+  var MEALS = ["فطور", "غداء"];
+  var DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  var state = { name: null, meal: null, entries: [], password: null };
+
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function showDate(iso) { var p = iso.split("-"); return p[2] + "-" + p[1] + "-" + p[0]; }
+  function dayName(iso) { var p = iso.split("-"); return DAYS[new Date(+p[0], p[1] - 1, +p[2]).getDay()]; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function choiceButtons(containerId, items, key) {
+    var box = $(containerId);
+    items.forEach(function (item) {
+      var b = document.createElement("button");
+      b.className = "choice"; b.textContent = item;
+      b.onclick = function () {
+        state[key] = item;
+        Array.prototype.forEach.call(box.children, function (c) { c.classList.toggle("on", c === b); });
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function flash(text, ok) {
+    var m = $("msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err");
+    clearTimeout(flash.t); flash.t = setTimeout(function () { m.className = "msg"; }, 5000);
+  }
+
+  function render() {
+    MEALS.forEach(function (meal) {
+      var rows = state.entries.filter(function (e) { return e.meal === meal; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+      $("t-" + meal).innerHTML = rows.length ? rows.map(function (e) {
+        var status = e.approved
+          ? '<span class="badge ok">✔ تمت الموافقة</span>'
+          : '<span class="badge wait">بانتظار</span><br><button class="mini" data-act="approve" data-id="' + esc(e.id) + '">موافقة</button>';
+        return "<tr><td class='date'>" + showDate(e.date) + "</td><td>" + dayName(e.date) + "</td><td><b>" + esc(e.name) +
+          "</b></td><td>" + status + ' <button class="mini del" data-act="delete" data-id="' + esc(e.id) + '">حذف</button></td></tr>';
+      }).join("") : '<tr><td colspan="4" class="empty">لا يوجد تسجيلات بعد</td></tr>';
+    });
+  }
+
+  function api(payload) {
+    var req = payload
+      ? fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+      : fetch(API_URL);
+    return req.then(function (r) { return r.json(); }).then(function (res) {
+      if (res.entries) { state.entries = res.entries; render(); }
+      return res;
+    });
+  }
+
+  function load() {
+    if (!API_URL) { $("setup").style.display = "block"; render(); return; }
+    api().catch(function () { flash("تعذر الاتصال، تأكدي من الإنترنت", false); });
+  }
+
+  $("submit").onclick = function () {
+    var date = $("date").value;
+    if (!state.name) return flash("اختاري اسمك أولاً", false);
+    if (!date) return flash("اختاري التاريخ", false);
+    if (!state.meal) return flash("اختاري الوجبة", false);
+    if (!API_URL) return flash("الصفحة غير مربوطة بجدول Google بعد", false);
+    var btn = this; btn.disabled = true;
+    api({ action: "add", name: state.name, date: date, meal: state.meal })
+      .then(function (res) {
+        if (res.ok) flash("أحسنتِ يا " + state.name + "! 🌟 تم التسجيل وبانتظار موافقة ولي الأمر", true);
+        else flash(res.error || "حدث خطأ", false);
+      })
+      .catch(function () { flash("تعذر الاتصال، حاولي مرة أخرى", false); })
+      .then(function () { btn.disabled = false; });
+  };
+
+  // موافقة أو حذف — يطلب كلمة السر مرة واحدة في كل جلسة
+  var pending = null;
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-act]");
+    if (!b) return;
+    pending = { action: b.dataset.act, id: b.dataset.id };
+    if (state.password) return send();
+    $("dlg-title").textContent = pending.action === "approve" ? "موافقة ولي الأمر" : "حذف التسجيل";
+    $("pw").value = ""; $("dlg").showModal(); $("pw").focus();
+  });
+  $("dlg-no").onclick = function () { $("dlg").close(); };
+  $("dlg-yes").onclick = function () { state.password = $("pw").value; $("dlg").close(); send(); };
+  $("pw").onkeydown = function (e) { if (e.key === "Enter") $("dlg-yes").click(); };
+
+  function send() {
+    if (pending.action === "delete" && !confirm("متأكد من حذف هذا التسجيل؟")) return;
+    api({ action: pending.action, id: pending.id, password: state.password })
+      .then(function (res) {
+        if (!res.ok) { if (/كلمة السر/.test(res.error)) state.password = null; flash(res.error, false); }
+      })
+      .catch(function () { flash("تعذر الاتصال", false); });
+  }
+
+  choiceButtons("names", NAMES, "name");
+  choiceButtons("meals", MEALS, "meal");
+  $("date").value = todayISO();
+  load();
+  setInterval(function () { if (API_URL && !document.hidden) api().catch(function () {}); }, 60000);
+</script>
+</body>
+</html>
