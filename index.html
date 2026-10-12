@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>جدول مسح الطاولة</title>
+<title>جدول الأبطال</title>
 <style>
   :root {
     --pink: #c2457d; --pink-soft: #fff4f9; --pink-line: #efc6da;
@@ -134,7 +134,7 @@
 <div class="wrap">
   <header>
     <button class="mini gear" id="open-settings">⚙️ الإعدادات</button>
-    <h1>⭐ جدول مسح الطاولة ⭐</h1>
+    <h1 id="app-title">⭐ جدول الأبطال ⭐</h1>
     <p id="subtitle"></p>
   </header>
 
@@ -196,6 +196,8 @@
 
 <dialog id="dlg-settings">
   <h3>⚙️ إعدادات العائلة</h3>
+  <h4>🏷️ اسم التطبيق</h4>
+  <input type="text" id="set-title" maxlength="40">
   <h4>👧👦 الأطفال</h4>
   <div id="set-kids"></div>
   <button class="add" id="add-kid">+ إضافة طفل</button>
@@ -227,6 +229,7 @@
 
   // الإعدادات الافتراضية حتى يصل رد Google — الإعدادات الفعلية محفوظة في Google
   var DEFAULT_CONFIG = {
+    title: "جدول الأبطال",
     goal: 40,
     kids: [
       { id: "k1", name: "غنون", gender: "f", color: "#c2457d", icon: "🌸" },
@@ -263,6 +266,9 @@
   // ===== بناء الواجهة حسب الإعدادات =====
   function buildUI() {
     var c = state.config, girls = allGirls();
+    var title = c.title || "جدول الأبطال";
+    $("app-title").textContent = "⭐ " + title + " ⭐";
+    document.title = title;
     $("subtitle").textContent = girls ? "سجّلي بعد ما تنجزين المهمة، وولي الأمر يوافق" : "سجّل بعد ما تنجز المهمة، وولي الأمر يوافق";
     $("rule").innerHTML = "<b>تذكير:</b> حمل الطعام والصحون إلى المطبخ مهمة مشتركة على الجميع دائماً، وبعدها " +
       (girls ? "تمسح صاحبة الدور" : "يمسح صاحب الدور") + " الطاولة.";
@@ -577,6 +583,7 @@
     draft = JSON.parse(JSON.stringify(state.config));
     renderSettings();
     $("set-goal").value = draft.goal || 40;
+    $("set-title").value = draft.title || "جدول الأبطال";
     $("set-pw").value = state.password || "";
     $("dlg-settings").showModal();
   };
@@ -611,6 +618,7 @@
   $("set-cancel").onclick = function () { $("dlg-settings").close(); };
   $("set-save").onclick = function () {
     draft.goal = +$("set-goal").value || 40;
+    draft.title = $("set-title").value.trim();
     var pw = $("set-pw").value, btn = this;
     btn.disabled = true;
     api({ action: "config", config: draft, password: pw })

@@ -9,6 +9,7 @@ var SHEET_NAME = 'Entries';
 var HISTORY_NAME = 'History';
 
 var DEFAULT_CONFIG = {
+  title: 'جدول الأبطال',
   goal: 40,
   kids: [
     { id: 'k1', name: 'غنون', gender: 'f', color: '#c2457d', icon: '🌸' },
@@ -24,7 +25,9 @@ var DEFAULT_CONFIG = {
 // ---------- الإعدادات ----------
 function getConfig_() {
   var raw = PropertiesService.getScriptProperties().getProperty('config');
-  return raw ? JSON.parse(raw) : DEFAULT_CONFIG;
+  var c = raw ? JSON.parse(raw) : DEFAULT_CONFIG;
+  if (!c.title) c.title = DEFAULT_CONFIG.title;
+  return c;
 }
 
 function cleanText_(s, max) { return String(s || '').replace(/\s+/g, ' ').trim().slice(0, max); }
@@ -48,7 +51,7 @@ function validateConfig_(c) {
   if (!unique(kids.map(function (k) { return k.name; }))) return 'يوجد اسم طفل مكرر';
   if (!unique(tasks.map(function (t) { return t.name; }))) return 'يوجد اسم مهمة مكرر';
   if (!unique(all.map(function (x) { return x.id; }))) return 'بيانات غير صحيحة';
-  return { goal: Math.max(5, Math.min(500, Math.round(+c.goal) || 40)), kids: kids, tasks: tasks };
+  return { title: cleanText_(c.title, 40) || 'جدول الأبطال', goal: Math.max(5, Math.min(500, Math.round(+c.goal) || 40)), kids: kids, tasks: tasks };
 }
 
 // عند تغيير اسم طفل أو مهمة يُحدَّث الاسم في كل التسجيلات القديمة حتى لا تضيع النقاط
