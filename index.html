@@ -76,6 +76,46 @@
   .row button { flex: 1; min-height: 48px; font: inherit; font-size: 18px; border-radius: 12px; border: 0; cursor: pointer; }
   .yes { background: var(--purple); color: #fff; }
   .no { background: #eee; color: var(--ink); }
+  /* لوحة الإنجاز */
+  .prize { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: #fff8e6; border: 2px dashed #f0c96a; border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; font-weight: bold; color: #8a5a00; }
+  .board { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+  @media (max-width: 640px) { .board { grid-template-columns: minmax(0,1fr); } }
+  .kid { --c: var(--pink); --soft: var(--pink-soft); border: 3px solid var(--c); background: var(--soft); border-radius: 18px; padding: 14px; position: relative; }
+  .kid.k1 { --c: var(--purple); --soft: var(--purple-soft); }
+  .kid-head { display: flex; align-items: center; justify-content: space-between; }
+  .kname { font-size: 26px; font-weight: bold; color: var(--c); }
+  .crown { font-size: 13px; font-weight: bold; background: #ffd95a; color: #6b4a00; border-radius: 99px; padding: 4px 10px; }
+  .pts { margin: 6px 0; font-size: 15px; color: var(--muted); }
+  .pts b { font-size: 40px; color: var(--c); margin-left: 4px; }
+  .bar { height: 14px; background: #fff; border-radius: 99px; overflow: hidden; border: 1px solid var(--pink-line); }
+  .bar i { display: block; height: 100%; background: var(--c); border-radius: 99px; transition: width .6s; }
+  .goal { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .stats div { background: #fff; border-radius: 12px; padding: 8px 4px; text-align: center; }
+  .stats b { display: block; font-size: 20px; }
+  .stats span { font-size: 12px; color: var(--muted); }
+  .last { margin-top: 10px; font-size: 14px; }
+  /* الشارات */
+  .kid-badges { margin-bottom: 14px; }
+  .kid-badges h3 { margin: 0 0 8px; font-size: 18px; }
+  .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .sticker { background: #fff; border: 2px solid var(--purple-line); border-radius: 16px; padding: 10px 6px; text-align: center; }
+  .sticker .ic { font-size: 34px; line-height: 1.2; }
+  .sticker .nm { font-weight: bold; font-size: 13px; margin-top: 4px; }
+  .sticker .ds { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sticker.got { border-color: #f0c96a; background: #fffbea; box-shadow: 0 2px 8px rgba(240,201,106,.35); }
+  .sticker.locked .ic { filter: grayscale(1); opacity: .3; }
+  .sticker.locked .nm { color: var(--muted); }
+  /* الأبطال */
+  .champs { list-style: none; margin: 0; padding: 0; }
+  .champs li { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 10px 4px; border-bottom: 1px solid var(--pink-line); }
+  .champs .who { font-weight: bold; color: var(--pink); }
+  /* الاحتفال */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .celebrate { text-align: center; }
+  .celebrate .big { font-size: 72px; line-height: 1.1; }
+  .celebrate p { font-size: 19px; margin: 8px 0 0; }
+  input[type=text] { font: inherit; font-size: 18px; padding: 10px 12px; width: 100%; border: 3px solid var(--pink-line); border-radius: 14px; margin-bottom: 10px; }
   footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0 24px; }
 </style>
 </head>
@@ -89,6 +129,12 @@
   <div class="setup" id="setup">
     الصفحة غير مربوطة بجدول Google بعد. ضع رابط Apps Script في المتغير <b>API_URL</b> داخل ملف index.html (الخطوات في README).
   </div>
+
+  <section class="card">
+    <h2>🏆 لوحة الإنجاز: شهر <span id="month-name"></span></h2>
+    <div class="prize"><span id="prize-text"></span><button class="mini" id="prize-edit">✏️ تحديد الجائزة</button></div>
+    <div class="board" id="board"></div>
+  </section>
 
   <section class="card">
     <h2>✍️ تسجيل جديد</h2>
@@ -121,7 +167,17 @@
       <table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-مسح خفيف"></tbody></table>
     </section>
   </div>
-  <footer>تُحذف التسجيلات تلقائياً بعد 45 يوماً</footer>
+
+  <section class="card">
+    <h2>🎖️ لوحة الشارات</h2>
+    <div id="badges"></div>
+  </section>
+
+  <section class="card">
+    <h2>👑 لوحة الأبطال</h2>
+    <ul class="champs" id="champs"></ul>
+  </section>
+  <footer>التسجيلات اليومية تُحذف بعد 45 يوماً، أما النقاط والشارات والأبطال فمحفوظة دائماً</footer>
 </div>
 
 <dialog id="dlg">
@@ -133,6 +189,24 @@
   </div>
 </dialog>
 
+<dialog id="dlg-prize">
+  <h3>🎁 جائزة بطل الشهر</h3>
+  <input type="text" id="prize-input" maxlength="100" placeholder="مثلاً: نزهة إلى الحديقة">
+  <input type="password" id="prize-pw" inputmode="numeric" placeholder="كلمة سر ولي الأمر" autocomplete="off">
+  <div class="row">
+    <button class="yes" id="prize-yes">حفظ</button>
+    <button class="no" id="prize-no">إلغاء</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-party" class="celebrate">
+  <div class="big" id="party-icon">🎉</div>
+  <p id="party-text"></p>
+  <div class="row"><button class="yes" id="party-ok">رائع! 🎉</button></div>
+</dialog>
+
+<canvas id="confetti"></canvas>
+
 <script>
   // رابط Google Apps Script (Deploy → Web app) — الصقه هنا
   var API_URL = "https://script.google.com/macros/s/AKfycbxJGBpvOwYnJDE3Vq-oixvH_Xfw5LdQPAAsHITnE6U8ifqplXpeLPG_8q5TpFDsj8MQ/exec";
@@ -140,7 +214,7 @@
   var NAMES = ["غنون", "ملوك"];
   var MEALS = ["فطور", "غداء", "مسح خفيف"];
   var DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-  var state = { name: null, meal: null, entries: [], password: null };
+  var state = { name: null, meal: null, entries: [], history: [], prizes: {}, password: null };
 
   function $(id) { return document.getElementById(id); }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
@@ -187,12 +261,13 @@
       : fetch(API_URL);
     return req.then(function (r) { return r.json(); }).then(function (res) {
       if (res.entries) { state.entries = res.entries; render(); }
+      if (res.history) { state.history = res.history; state.prizes = res.prizes || {}; renderAchievements(); }
       return res;
     });
   }
 
   function load() {
-    if (!API_URL) { $("setup").style.display = "block"; render(); return; }
+    if (!API_URL) { $("setup").style.display = "block"; render(); renderAchievements(); return; }
     api().catch(function () { flash("تعذر الاتصال، تأكدي من الإنترنت", false); });
   }
 
@@ -234,6 +309,192 @@
       })
       .catch(function () { flash("تعذر الاتصال", false); });
   }
+
+  // ===== لوحة الإنجاز والشارات والأبطال =====
+  var POINTS = { "فطور": 2, "غداء": 2, "مسح خفيف": 1 };
+  var GOAL = 40;
+  var MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  var BADGES = [
+    { id: "first",   icon: "🌱", name: "البداية",        desc: "أول مسح" },
+    { id: "week5",   icon: "⭐", name: "نجمة الأسبوع",   desc: "5 مسحات في أسبوع" },
+    { id: "streak3", icon: "🔥", name: "سلسلة النار",    desc: "3 أيام متتالية" },
+    { id: "streak7", icon: "🚀", name: "لا تتوقف",       desc: "7 أيام متتالية" },
+    { id: "bf10",    icon: "🌅", name: "بطلة الفطور",    desc: "10 مسحات فطور" },
+    { id: "ln10",    icon: "🍽️", name: "بطلة الغداء",    desc: "10 مسحات غداء" },
+    { id: "lt10",    icon: "🧽", name: "اللمسة السريعة", desc: "10 مسحات خفيفة" },
+    { id: "p100",    icon: "💯", name: "المئة",          desc: "100 نقطة" },
+    { id: "champ",   icon: "🏆", name: "بطلة الشهر",     desc: "الفوز بلقب الشهر" }
+  ];
+
+  function toDate(iso) { var p = iso.split("-"); return new Date(+p[0], p[1] - 1, +p[2]); }
+  function toISO(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function addDays(iso, n) { var d = toDate(iso); d.setDate(d.getDate() + n); return toISO(d); }
+  function weekStart(iso) { return addDays(iso, -toDate(iso).getDay()); } // الأسبوع يبدأ الأحد
+  function monthLabel(m) { var p = m.split("-"); return MONTHS[p[1] - 1] + " " + p[0]; }
+  function nextMonthStart(m) { var p = m.split("-"); return toISO(new Date(+p[0], +p[1], 1)); }
+
+  function computeStats() {
+    var today = todayISO(), month = today.slice(0, 7);
+    var hist = state.history.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
+    // أبطال الأشهر المنتهية (عند التعادل تفوز الاثنتان)
+    var byMonth = {};
+    hist.forEach(function (e) {
+      var m = e.date.slice(0, 7);
+      if (m >= month) return;
+      byMonth[m] = byMonth[m] || {};
+      byMonth[m][e.name] = (byMonth[m][e.name] || 0) + (POINTS[e.meal] || 0);
+    });
+    var champions = Object.keys(byMonth).sort().reverse().map(function (m) {
+      var max = Math.max.apply(null, NAMES.map(function (n) { return byMonth[m][n] || 0; }));
+      return { month: m, points: max, winners: max > 0 ? NAMES.filter(function (n) { return (byMonth[m][n] || 0) === max; }) : [] };
+    }).filter(function (c) { return c.winners.length; });
+
+    var kids = NAMES.map(function (name) {
+      var list = hist.filter(function (e) { return e.name === name; });
+      var c = { total: 0, bf: 0, ln: 0, lt: 0, weeks: {}, run: 0, last: null };
+      var earned = {};
+      function earn(id, date) { if (!earned[id]) earned[id] = date; }
+      list.forEach(function (e) {
+        if (e.date !== c.last) { c.run = c.last && addDays(c.last, 1) === e.date ? c.run + 1 : 1; c.last = e.date; }
+        c.total += POINTS[e.meal] || 0;
+        if (e.meal === "فطور") c.bf++; else if (e.meal === "غداء") c.ln++; else c.lt++;
+        var w = weekStart(e.date); c.weeks[w] = (c.weeks[w] || 0) + 1;
+        earn("first", e.date);
+        if (c.weeks[w] >= 5) earn("week5", e.date);
+        if (c.run >= 3) earn("streak3", e.date);
+        if (c.run >= 7) earn("streak7", e.date);
+        if (c.bf >= 10) earn("bf10", e.date);
+        if (c.ln >= 10) earn("ln10", e.date);
+        if (c.lt >= 10) earn("lt10", e.date);
+        if (c.total >= 100) earn("p100", e.date);
+      });
+      var wins = champions.filter(function (ch) { return ch.winners.indexOf(name) >= 0; });
+      if (wins.length) earn("champ", nextMonthStart(wins[wins.length - 1].month));
+
+      var days = {};
+      list.forEach(function (e) { days[e.date] = true; });
+      var d = days[today] ? today : addDays(today, -1), streak = 0;
+      while (days[d]) { streak++; d = addDays(d, -1); }
+
+      var latest = null;
+      BADGES.forEach(function (b) { if (earned[b.id] && (!latest || earned[b.id] >= earned[latest.id])) latest = b; });
+
+      return {
+        name: name, earned: earned, latest: latest, streak: streak, wins: wins.length,
+        monthPoints: list.filter(function (e) { return e.date.slice(0, 7) === month; })
+          .reduce(function (s, e) { return s + (POINTS[e.meal] || 0); }, 0),
+        weekCount: c.weeks[weekStart(today)] || 0
+      };
+    });
+    var top = Math.max.apply(null, kids.map(function (k) { return k.monthPoints; }));
+    kids.forEach(function (k) { k.leader = top > 0 && k.monthPoints === top; });
+    return { month: month, kids: kids, champions: champions };
+  }
+
+  function renderAchievements() {
+    var st = computeStats();
+    $("month-name").textContent = monthLabel(st.month);
+    var prize = state.prizes[st.month];
+    $("prize-text").textContent = prize ? "🎁 جائزة بطل الشهر: " + prize : "🎁 جائزة بطل الشهر لم تُحدد بعد";
+
+    $("board").innerHTML = st.kids.map(function (k, i) {
+      var pct = Math.min(100, Math.round(k.monthPoints / GOAL * 100));
+      var left = GOAL - k.monthPoints;
+      var got = BADGES.filter(function (b) { return k.earned[b.id]; }).length;
+      return '<div class="kid k' + i + '"><div class="kid-head"><span class="kname">' + esc(k.name) + '</span>' +
+        (k.leader ? '<span class="crown">👑 متصدرة الشهر</span>' : '') + '</div>' +
+        '<div class="pts"><b>' + k.monthPoints + '</b>نقطة هذا الشهر</div>' +
+        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="goal">' + (left > 0 ? k.monthPoints + ' / ' + GOAL + '، باقي ' + left + ' نقطة لهدف الشهر' : '🎯 حققتِ هدف الشهر!') + '</div>' +
+        '<div class="stats"><div><b>' + k.weekCount + '</b><span>مسحات هذا الأسبوع</span></div>' +
+        '<div><b>🔥 ' + k.streak + '</b><span>أيام متتالية</span></div>' +
+        '<div><b>' + got + '/' + BADGES.length + '</b><span>الشارات</span></div></div>' +
+        '<div class="last">' + (k.latest ? 'آخر شارة: ' + k.latest.icon + ' <b>' + k.latest.name + '</b>' : 'أول شارة تنتظرك 🌱') + '</div></div>';
+    }).join("");
+
+    $("badges").innerHTML = st.kids.map(function (k) {
+      return '<div class="kid-badges"><h3>' + esc(k.name) + '</h3><div class="stickers">' + BADGES.map(function (b) {
+        var got = !!k.earned[b.id];
+        var extra = b.id === "champ" && k.wins > 1 ? " ×" + k.wins : "";
+        return '<div class="sticker ' + (got ? "got" : "locked") + '"><div class="ic">' + b.icon + '</div>' +
+          '<div class="nm">' + (got ? "" : "🔒 ") + b.name + extra + '</div><div class="ds">' + b.desc + '</div></div>';
+      }).join("") + '</div></div>';
+    }).join("");
+
+    $("champs").innerHTML = st.champions.length ? st.champions.map(function (c) {
+      var pr = state.prizes[c.month];
+      return '<li><span>' + monthLabel(c.month) + '</span><span class="who">👑 ' + c.winners.map(esc).join(" و ") +
+        '</span><span>' + c.points + ' نقطة' + (pr ? ' · 🎁 ' + esc(pr) : '') + '</span></li>';
+    }).join("") : '<li class="empty">أول بطلة تُعلن نهاية شهر ' + MONTHS[+st.month.slice(5) - 1] + ' 🏁</li>';
+
+    checkNewBadges(st);
+  }
+
+  // احتفال عند الحصول على شارة جديدة (يتذكر كل جهاز ما احتفل به)
+  function checkNewBadges(st) {
+    if (!state.history.length && !API_URL) return;
+    var now = [];
+    st.kids.forEach(function (k) { BADGES.forEach(function (b) { if (k.earned[b.id]) now.push(k.name + "|" + b.id); }); });
+    var seen = null;
+    try { seen = JSON.parse(localStorage.getItem("seenBadges")); } catch (e) {}
+    try { localStorage.setItem("seenBadges", JSON.stringify(now)); } catch (e) {}
+    if (!seen) return;
+    var fresh = now.filter(function (x) { return seen.indexOf(x) < 0; });
+    if (!fresh.length) return;
+    var lines = fresh.map(function (x) {
+      var p = x.split("|"), b = BADGES.filter(function (b) { return b.id === p[1]; })[0];
+      return "مبروك يا " + p[0] + "! حصلتِ على شارة " + b.icon + " " + b.name;
+    });
+    $("party-icon").textContent = BADGES.filter(function (b) { return b.id === fresh[0].split("|")[1]; })[0].icon;
+    var more = lines.length > 3 ? "<br>و " + (lines.length - 3) + " شارات أخرى! 🌟" : "";
+    $("party-text").innerHTML = lines.slice(0, 3).map(esc).join("<br>") + more;
+    if (!$("dlg-party").open) $("dlg-party").showModal();
+    confetti();
+  }
+  $("party-ok").onclick = function () { $("dlg-party").close(); };
+
+  function confetti() {
+    var cv = $("confetti"), ctx = cv.getContext("2d");
+    cv.width = innerWidth; cv.height = innerHeight;
+    var colors = ["#c2457d", "#7a4fa3", "#2b8a8a", "#f0c96a", "#e58fb5", "#5bc0eb"];
+    var parts = [];
+    for (var i = 0; i < 160; i++) parts.push({
+      x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .5,
+      w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, vy: 2 + Math.random() * 3,
+      vx: -1.5 + Math.random() * 3, r: Math.random() * 6, vr: -.2 + Math.random() * .4,
+      c: colors[i % colors.length]
+    });
+    var start = performance.now();
+    (function frame(t) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      parts.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      });
+      if (t - start < 4000) requestAnimationFrame(frame); else ctx.clearRect(0, 0, cv.width, cv.height);
+    })(start);
+  }
+
+  // جائزة الشهر — يحددها ولي الأمر
+  $("prize-edit").onclick = function () {
+    $("prize-input").value = state.prizes[todayISO().slice(0, 7)] || "";
+    $("prize-pw").value = state.password || "";
+    $("dlg-prize").showModal(); $("prize-input").focus();
+  };
+  $("prize-no").onclick = function () { $("dlg-prize").close(); };
+  $("prize-yes").onclick = function () {
+    var pw = $("prize-pw").value;
+    $("dlg-prize").close();
+    if (!API_URL) return;
+    api({ action: "prize", month: todayISO().slice(0, 7), text: $("prize-input").value.trim(), password: pw })
+      .then(function (res) {
+        if (res.ok) state.password = pw;
+        else flash(res.error || "حدث خطأ", false);
+      })
+      .catch(function () { flash("تعذر الاتصال", false); });
+  };
 
   choiceButtons("names", NAMES, "name");
   choiceButtons("meals", MEALS, "meal");
