@@ -1,35 +1,25 @@
 # جدول الأبطال
 
-صفحة بسيطة يسجّل فيها الأطفال مهام البيت، ويوافق عليها ولي الأمر بكلمة سر، مع لوحة إنجاز وشارات وبطل الشهر.
-أسماء الأطفال والمهام ونقاطها تُضبط من زر ⚙️ الإعدادات داخل الصفحة.
-التسجيلات تُحفظ في Google Sheet وتُحذف تلقائياً بعد 45 يوماً.
+صفحة يسجّل فيها الأطفال مهام البيت، ويوافق عليها ولي الأمر، مع لوحة إنجاز وشارات وبطل الشهر.
+أسماء الأطفال والمهام ونقاطها واسم التطبيق ورمز ولي الأمر تُضبط من زر ⚙️ الإعدادات داخل الصفحة.
 
-## الخطوة 1: إعداد Google Sheet (مرة واحدة)
+**الموقع:** https://tablehero-d582b.web.app
 
-1. افتح [sheets.new](https://sheets.new) لإنشاء جدول جديد، وسمّه مثلاً "جدول مسح الطاولة".
-2. من القائمة: **Extensions ← Apps Script** (الإضافات ← برمجة التطبيقات).
-3. احذف الكود الموجود، والصق محتوى ملف `apps-script/Code.gs`، ثم احفظ.
-4. اضغط **Deploy ← New deployment**، واختر النوع **Web app**:
-   - **Execute as:** Me
-   - **Who has access:** Anyone
-5. اضغط Deploy ووافق على الصلاحيات (قد تظهر رسالة "Google hasn't verified this app": اضغط Advanced ← Go to ... ).
-6. انسخ رابط **Web app URL** (ينتهي بـ `/exec`).
+## كيف يعمل
 
-## الخطوة 2: ربط الصفحة
+- **Firebase Authentication:** ولي الأمر يسجّل دخوله بحساب Google مرة واحدة على كل جهاز.
+- **Cloud Firestore:** كل عائلة لها مستند `families/{uid}` فيه الإعدادات والجوائز والرمز، وتحته `entries` للتسجيلات.
+- **قواعد الحماية** (`firestore.rules`): لا يقرأ ولا يكتب في بيانات العائلة إلا ولي أمرها.
+- **Firebase Hosting:** يستضيف `public/index.html`.
 
-افتح `index.html` وضع الرابط في السطر:
+## النشر
 
-```js
-var API_URL = "https://script.google.com/macros/s/..../exec";
+```bash
+firebase deploy --only hosting          # الصفحة
+firebase deploy --only firestore:rules  # قواعد الحماية
 ```
 
-## الخطوة 3: النشر على GitHub Pages
+## ملفات قديمة
 
-1. ارفع الملفات إلى مستودع على GitHub.
-2. من المستودع: **Settings ← Pages ← Branch: main / root ← Save**.
-3. بعد دقيقة يظهر رابط الموقع، افتحه من التابلت أو اللابتوب.
-
-## تغيير كلمة السر
-
-كلمة السر في `Code.gs` داخل Apps Script (السطر `PARENT_PASSWORD`) وليست في الصفحة.
-بعد تغييرها: **Deploy ← Manage deployments ← Edit ← Version: New version ← Deploy**.
+- `index.html` في الجذر يحوّل رابط GitHub Pages القديم إلى الموقع الجديد.
+- `apps-script/Code.gs` نسخة Google Sheet السابقة، محفوظة كمرجع ونسخة احتياطية.
