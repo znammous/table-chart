@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جدول الأبطال</title>
+<style>
+  :root {
+    --pink: #c2457d; --pink-soft: #fff4f9; --pink-line: #efc6da;
+    --purple: #7a4fa3; --purple-soft: #f6f0fb; --purple-line: #dccbee;
+    --ink: #3a2a3a; --muted: #8a7a8a; --ok: #2f8f5b; --ok-soft: #e6f5ec;
+    --wait: #b7791f; --wait-soft: #fdf3e1; --bg: #fdfafc; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Geeza Pro", "Al Bayan", "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 17px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header {
+    text-align: center; padding: 18px 12px; border: 2px dashed #e58fb5;
+    border-radius: 18px; background: var(--pink-soft); margin-bottom: 16px; position: relative;
+  }
+  h1 { margin: 0; color: var(--pink); font-size: 30px; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+  .gear { position: absolute; top: 10px; left: 10px; }
+  .card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(122,79,163,.08); margin-bottom: 16px; }
+  .card h2 { margin: 0 0 14px; font-size: 21px; color: var(--purple); }
+  .rule { background: var(--purple-soft); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; font-size: 15px; line-height: 1.7; }
+  .label { font-weight: bold; margin: 14px 0 8px; }
+  .choices { display: flex; gap: 10px; flex-wrap: wrap; }
+  .choice {
+    --c: var(--pink);
+    flex: 1 1 110px; min-height: 64px; font: inherit; font-size: 21px; font-weight: bold;
+    border: 3px solid var(--pink-line); background: #fff; color: var(--ink);
+    border-radius: 16px; cursor: pointer; padding: 6px;
+  }
+  .choice small { display: block; font-size: 12px; font-weight: normal; color: var(--muted); }
+  .choice.on { border-color: var(--c); background: var(--c); color: #fff; }
+  .choice.on small { color: #fff; }
+  input[type=date], input[type=password], input[type=text], input[type=number], select {
+    font: inherit; font-size: 18px; padding: 10px 12px; width: 100%;
+    border: 3px solid var(--pink-line); border-radius: 14px; background: #fff; color: var(--ink);
+  }
+  input[type=date] { font-size: 20px; padding: 12px 14px; }
+  .submit {
+    margin-top: 18px; width: 100%; min-height: 64px; font: inherit; font-size: 23px; font-weight: bold;
+    background: var(--pink); color: #fff; border: 0; border-radius: 16px; cursor: pointer;
+  }
+  .submit:disabled { opacity: .5; cursor: default; }
+  .msg { margin-top: 12px; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; display: none; }
+  .msg.ok { display: block; background: var(--ok-soft); color: var(--ok); }
+  .msg.err { display: block; background: #fdecec; color: #b42318; }
+  .tables { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  @media (max-width: 1100px) { .tables { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  @media (max-width: 720px) { .tables { grid-template-columns: minmax(0,1fr); } }
+  @media (max-width: 480px) { .wrap { padding: 16px 10px; } .card { padding: 14px 10px; } table { font-size: 13px; } h1 { font-size: 24px; } }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .task-card { --c: var(--pink); }
+  .task-card h2 { color: var(--c); }
+  th { background: var(--c, var(--pink)); color: #fff; padding: 8px 6px; font-weight: bold; }
+  td { border-bottom: 1px solid var(--pink-line); padding: 8px 6px; text-align: center; }
+  td.date { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+  .empty { color: var(--muted); padding: 16px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 13px; font-weight: bold; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.wait { background: var(--wait-soft); color: var(--wait); }
+  .mini { font: inherit; font-size: 13px; padding: 5px 9px; border-radius: 10px; border: 2px solid var(--purple-line); background: #fff; color: var(--purple); cursor: pointer; margin: 2px; }
+  .mini.del { color: #b42318; border-color: #f3c3c3; }
+  dialog { border: 0; border-radius: 18px; padding: 20px; width: min(360px, 92vw); }
+  dialog::backdrop { background: rgba(58,42,58,.45); }
+  dialog h3 { margin: 0 0 12px; color: var(--purple); }
+  .row { display: flex; gap: 10px; margin-top: 14px; }
+  .row button { flex: 1; min-height: 48px; font: inherit; font-size: 18px; border-radius: 12px; border: 0; cursor: pointer; }
+  .yes { background: var(--purple); color: #fff; }
+  .no { background: #eee; color: var(--ink); }
+  dialog input + input { margin-top: 10px; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 0 24px; }
+  /* لوحة الإنجاز */
+  .prize { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: #fff8e6; border: 2px dashed #f0c96a; border-radius: 14px; padding: 10px 14px; margin-bottom: 14px; font-weight: bold; color: #8a5a00; }
+  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .kid { --c: var(--pink); border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 7%, #fff); border-radius: 18px; padding: 14px; }
+  .kid-head { display: flex; align-items: center; justify-content: space-between; }
+  .kname { font-size: 26px; font-weight: bold; color: var(--c); }
+  .crown { font-size: 13px; font-weight: bold; background: #ffd95a; color: #6b4a00; border-radius: 99px; padding: 4px 10px; }
+  .pts { margin: 6px 0; font-size: 15px; color: var(--muted); }
+  .pts b { font-size: 40px; color: var(--c); margin-left: 4px; }
+  .bar { height: 14px; background: #fff; border-radius: 99px; overflow: hidden; border: 1px solid var(--pink-line); }
+  .bar i { display: block; height: 100%; background: var(--c); border-radius: 99px; transition: width .6s; }
+  .goal { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .stats div { background: #fff; border-radius: 12px; padding: 8px 4px; text-align: center; }
+  .stats b { display: block; font-size: 20px; }
+  .stats span { font-size: 12px; color: var(--muted); }
+  .last { margin-top: 10px; font-size: 14px; }
+  /* الشارات */
+  .kid-badges { margin-bottom: 14px; }
+  .kid-badges h3 { margin: 0 0 8px; font-size: 18px; }
+  .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .sticker { background: #fff; border: 2px solid var(--purple-line); border-radius: 16px; padding: 10px 6px; text-align: center; }
+  .sticker .ic { font-size: 34px; line-height: 1.2; }
+  .sticker .nm { font-weight: bold; font-size: 13px; margin-top: 4px; }
+  .sticker .ds { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sticker.got { border-color: #f0c96a; background: #fffbea; box-shadow: 0 2px 8px rgba(240,201,106,.35); }
+  .sticker.locked .ic { filter: grayscale(1); opacity: .3; }
+  .sticker.locked .nm { color: var(--muted); }
+  /* الأبطال */
+  .champs { list-style: none; margin: 0; padding: 0; }
+  .champs li { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 10px 4px; border-bottom: 1px solid var(--pink-line); }
+  .champs .who { font-weight: bold; color: var(--pink); }
+  /* الاحتفال */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .celebrate { text-align: center; }
+  .celebrate .big { font-size: 72px; line-height: 1.1; }
+  .celebrate p { font-size: 19px; margin: 8px 0 0; }
+  /* الإعدادات */
+  #dlg-settings { width: min(680px, 96vw); max-height: 92vh; }
+  #dlg-settings h4 { margin: 18px 0 8px; color: var(--pink); }
+  .set-row { display: grid; gap: 8px; align-items: center; padding: 10px; border: 2px solid var(--purple-line); border-radius: 14px; margin-bottom: 8px; }
+  .set-row.kid-row, .set-row.task-row { grid-template-columns: 80px 1fr 100px 40px; }
+  .set-row select, .set-row input { font-size: 16px; padding: 8px; border-width: 2px; border-radius: 10px; }
+  .swatches { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+  .sw { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--purple-line); cursor: pointer; }
+  .sw.on { box-shadow: 0 0 0 3px var(--ink); }
+  .repeat { grid-column: 1 / -1; font-size: 14px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .x { width: 40px; height: 40px; border-radius: 10px; border: 2px solid #f3c3c3; background: #fff; color: #b42318; font-size: 18px; cursor: pointer; }
+  .add { width: 100%; padding: 10px; font: inherit; font-size: 16px; border: 2px dashed var(--purple-line); border-radius: 14px; background: #fff; color: var(--purple); cursor: pointer; }
+  .hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+  @media (max-width: 520px) { .set-row.kid-row, .set-row.task-row { grid-template-columns: 70px 1fr 40px; } .set-row .third { grid-column: 1 / -1; } }
+  .hide { display: none !important; }
+  .login { text-align: center; max-width: 520px; margin: 30px auto; }
+  .login .big { font-size: 64px; }
+  .login p { color: var(--muted); line-height: 1.7; }
+  .loading { text-align: center; color: var(--muted); padding: 40px; }
+  .welcome { background: var(--ok-soft); color: var(--ok); border-radius: 12px; padding: 10px 14px; font-weight: bold; }
+  .account { text-align: center; margin-top: 14px; }
+  .account a { color: var(--purple); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="mini gear hide" id="open-settings">⚙️ الإعدادات</button>
+    <h1 id="app-title">⭐ جدول الأبطال ⭐</h1>
+    <p id="subtitle">مهام البيت بطريقة ممتعة</p>
+  </header>
+
+  <section class="card login hide" id="login">
+    <div class="big">🏆</div>
+    <h2>أهلاً بك في جدول الأبطال</h2>
+    <p>يسجّل ولي الأمر دخوله بحساب Google مرة واحدة على هذا الجهاز، ثم يستخدمه الأطفال مباشرة.</p>
+    <button class="submit" id="login-btn">تسجيل الدخول بحساب Google</button>
+    <div class="msg" id="login-msg"></div>
+  </section>
+
+  <div id="loading" class="loading">⏳ جاري التحميل...</div>
+
+  <main id="app" class="hide">
+    <section class="card">
+      <h2>🏆 لوحة الإنجاز: شهر <span id="month-name"></span></h2>
+      <div class="prize"><span id="prize-text"></span><button class="mini" id="prize-edit">✏️ تحديد الجائزة</button></div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="card">
+      <h2>✍️ تسجيل جديد</h2>
+      <div class="rule" id="rule"></div>
+
+      <div class="label">اسمي</div>
+      <div class="choices" id="names"></div>
+
+      <div class="label">التاريخ</div>
+      <input type="date" id="date">
+
+      <div class="label">المهمة</div>
+      <div class="choices" id="meals"></div>
+
+      <button class="submit" id="submit">✅ تم الإنجاز</button>
+      <div class="msg" id="msg"></div>
+    </section>
+
+    <div class="tables" id="tables"></div>
+
+    <section class="card">
+      <h2>🎖️ لوحة الشارات</h2>
+      <div id="badges"></div>
+    </section>
+
+    <section class="card">
+      <h2>👑 لوحة الأبطال</h2>
+      <ul class="champs" id="champs"></ul>
+    </section>
+    <footer>الجداول تعرض آخر 45 يوماً، أما النقاط والشارات والأبطال فمحفوظة دائماً</footer>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <h3>🔑 رمز ولي الأمر</h3>
+  <input type="password" id="pw" inputmode="numeric" placeholder="الرمز" autocomplete="off">
+  <div class="row">
+    <button class="yes" id="dlg-yes">تأكيد</button>
+    <button class="no" id="dlg-no">إلغاء</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-prize">
+  <h3>🎁 جائزة بطل الشهر</h3>
+  <input type="text" id="prize-input" maxlength="100" placeholder="مثلاً: نزهة إلى الحديقة">
+  <div class="row">
+    <button class="yes" id="prize-yes">حفظ</button>
+    <button class="no" id="prize-no">إلغاء</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-settings">
+  <h3>⚙️ إعدادات العائلة</h3>
+  <p class="welcome hide" id="welcome">👋 أهلاً بك! أضف أسماء أطفالك والمهام التي تريدها، ثم اضغط حفظ.</p>
+  <h4>🏷️ اسم التطبيق</h4>
+  <input type="text" id="set-title" maxlength="40">
+  <h4>👧👦 الأطفال</h4>
+  <div id="set-kids"></div>
+  <button class="add" id="add-kid">+ إضافة طفل</button>
+  <h4>📋 المهام</h4>
+  <div id="set-tasks"></div>
+  <button class="add" id="add-task">+ إضافة مهمة</button>
+  <p class="hint">حذف طفل أو مهمة يخفي تسجيلاتها.</p>
+  <h4>🎯 هدف الشهر (نقاط)</h4>
+  <input type="number" id="set-goal" min="5" max="500">
+  <h4>🔑 تغيير رمز ولي الأمر</h4>
+  <input type="password" id="set-pin" inputmode="numeric" maxlength="12" autocomplete="new-password" placeholder="اتركه فارغاً للإبقاء على الرمز الحالي">
+  <p class="hint">الرمز يُطلب عند الموافقة والحذف وتعديل الإعدادات.</p>
+  <div class="hide" id="import-box">
+    <h4>📥 استيراد من Google Sheet</h4>
+    <button class="add" id="import-btn">استيراد التسجيلات والإعدادات القديمة</button>
+  </div>
+  <div class="row">
+    <button class="yes" id="set-save">حفظ</button>
+    <button class="no" id="set-cancel">إلغاء</button>
+  </div>
+  <p class="hint account"><span id="who"></span> · <a href="#" id="logout">تسجيل الخروج</a></p>
+</dialog>
+
+<dialog id="dlg-party" class="celebrate">
+  <div class="big" id="party-icon">🎉</div>
+  <p id="party-text"></p>
+  <div class="row"><button class="yes" id="party-ok">رائع! 🎉</button></div>
+</dialog>
+
+<canvas id="confetti"></canvas>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import {
+    initializeFirestore, persistentLocalCache, doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc,
+    runTransaction, writeBatch, serverTimestamp, deleteField
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyBny9DhGm7ySaAa9lBxw3tbHaZ7OdCAPNU",
+    authDomain: "tablehero-d582b.firebaseapp.com",
+    projectId: "tablehero-d582b",
+    storageBucket: "tablehero-d582b.firebasestorage.app",
+    messagingSenderId: "1035331862918",
+    appId: "1:1035331862918:web:d73e41610d2d2185a96c07"
+  };
+  var fb = initializeApp(firebaseConfig);
+  var auth = getAuth(fb);
+  var db = initializeFirestore(fb, { localCache: persistentLocalCache() });
+
+  // رابط Google Apps Script القديم — يُستخدم فقط لاستيراد البيانات مرة واحدة (?import=1)
+  var OLD_API_URL = "https://script.google.com/macros/s/AKfycbxJGBpvOwYnJDE3Vq-oixvH_Xfw5LdQPAAsHITnE6U8ifqplXpeLPG_8q5TpFDsj8MQ/exec";
+
+  // إعدادات العائلة الجديدة — يعدّلها ولي الأمر من الإعدادات
+  var DEFAULT_CONFIG = {
+    title: "جدول الأبطال",
+    goal: 40,
+    kids: [{ id: "k1", name: "", gender: "f", color: "#c2457d", icon: "🌸" }],
+    tasks: [
+      { id: "t1", name: "فطور", icon: "🍳", points: 2, repeat: false },
+      { id: "t2", name: "غداء", icon: "🍲", points: 3, repeat: false },
+      { id: "t3", name: "مسح خفيف", icon: "🧽", points: 1, repeat: true }
+    ]
+  };
+  var DEFAULT_PIN = "12345";
+  var SHOW_DAYS = 45;
+  var KID_COLORS = ["#c2457d", "#7a4fa3", "#2b8a8a", "#d9822b", "#3b7dd8", "#4a9e4a", "#c0392b", "#8e6c3a"];
+  var TASK_COLORS = ["#c2457d", "#7a4fa3", "#2b8a8a", "#d9822b", "#3b7dd8", "#4a9e4a", "#8e6c3a", "#c0392b", "#5d6d7e", "#a0527a"];
+  var KID_ICONS = ["🌸", "🦋", "🌟", "🐱", "🐰", "🦄", "🐻", "🐼", "🦁", "🐬", "🍓", "🚀", "⚽", "🦖"];
+  var TASK_ICONS = ["🍳", "🍲", "🧽", "🧹", "🍽️", "🛏️", "🧺", "🚿", "🪴", "🧸", "📚", "🗑️", "🐾", "👕"];
+  var DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  var MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  var state = { user: null, familyRef: null, family: null, config: DEFAULT_CONFIG, kidId: null, taskId: null, entries: [], unlocked: false, loaded: false };
+  var unsubs = [];
+
+  function $(id) { return document.getElementById(id); }
+  function show(id, on) { $(id).classList.toggle("hide", !on); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function showDate(iso) { var p = iso.split("-"); return p[2] + "-" + p[1] + "-" + p[0]; }
+  function dayName(iso) { var p = iso.split("-"); return DAYS[new Date(+p[0], p[1] - 1, +p[2]).getDay()]; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function kidById(id) { return state.config.kids.filter(function (k) { return k.id === id; })[0]; }
+  function taskById(id) { return state.config.tasks.filter(function (t) { return t.id === id; })[0]; }
+  function taskColor(t) { return TASK_COLORS[state.config.tasks.indexOf(t) % TASK_COLORS.length]; }
+  function ptsWord(p) { return p >= 3 && p <= 10 ? "نقاط" : "نقطة"; }
+  function newId(prefix) { return prefix + Date.now().toString(36).slice(-6) + Math.floor(Math.random() * 100); }
+  // صيغة المؤنث أو المذكر حسب الطفل
+  function G(kid, f, m) { return kid && kid.gender === "m" ? m : f; }
+  function allGirls() { return state.config.kids.every(function (k) { return k.gender !== "m"; }); }
+
+  function flash(text, ok) {
+    var m = $("msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err");
+    clearTimeout(flash.t); flash.t = setTimeout(function () { m.className = "msg"; }, 5000);
+  }
+
+  // ===== تسجيل الدخول والاتصال بالعائلة =====
+  $("login-btn").onclick = function () {
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) {
+      $("login-msg").textContent = "تعذر تسجيل الدخول: " + (e.code || e.message);
+      $("login-msg").className = "msg err";
+    });
+  };
+  $("logout").onclick = function (ev) {
+    ev.preventDefault();
+    if (!confirm("تسجيل الخروج من هذا الجهاز؟")) return;
+    $("dlg-settings").close();
+    signOut(auth);
+  };
+
+  onAuthStateChanged(auth, function (user) {
+    unsubs.forEach(function (u) { u(); }); unsubs = [];
+    state.user = user; state.unlocked = false; state.loaded = false;
+    show("loading", false);
+    show("login", !user); show("app", !!user); show("open-settings", !!user);
+    if (!user) return;
+    $("who").textContent = user.email || "";
+    state.familyRef = doc(db, "families", user.uid);
+    unsubs.push(onSnapshot(state.familyRef, function (snap) {
+      if (!snap.exists()) {
+        // عائلة جديدة: إعدادات افتراضية ثم فتح الإعدادات لإضافة الأطفال
+        setDoc(state.familyRef, { config: DEFAULT_CONFIG, pin: DEFAULT_PIN, prizes: {}, parents: [], createdAt: serverTimestamp() })
+          .then(function () { state.unlocked = true; openSettings(true); });
+        return;
+      }
+      state.family = snap.data();
+      state.config = state.family.config || DEFAULT_CONFIG;
+      buildUI(); render(); renderAchievements();
+    }, onDbError));
+    unsubs.push(onSnapshot(collection(state.familyRef, "entries"), function (snap) {
+      state.entries = snap.docs.map(function (d) { var x = d.data(); x.id = d.id; return x; });
+      state.loaded = true;
+      render(); renderAchievements();
+    }, onDbError));
+  });
+
+  function onDbError(e) { flash("تعذر الاتصال بقاعدة البيانات: " + (e.code || e.message), false); }
+
+  // رمز ولي الأمر — يُطلب مرة واحدة في كل جلسة
+  var afterPin = null;
+  function requirePin(cb) {
+    if (state.unlocked) return cb();
+    afterPin = cb;
+    $("pw").value = ""; $("dlg").showModal(); $("pw").focus();
+  }
+  $("dlg-no").onclick = function () { $("dlg").close(); };
+  $("dlg-yes").onclick = function () {
+    $("dlg").close();
+    if ($("pw").value === String(state.family && state.family.pin || DEFAULT_PIN)) { state.unlocked = true; if (afterPin) afterPin(); }
+    else flash("الرمز غير صحيح", false);
+  };
+  $("pw").onkeydown = function (e) { if (e.key === "Enter") $("dlg-yes").click(); };
+
+  // ===== بناء الواجهة حسب الإعدادات =====
+  function buildUI() {
+    var c = state.config, girls = allGirls();
+    var title = c.title || "جدول الأبطال";
+    $("app-title").textContent = "⭐ " + title + " ⭐";
+    document.title = title;
+    $("subtitle").textContent = girls ? "سجّلي بعد ما تنجزين المهمة، وولي الأمر يوافق" : "سجّل بعد ما تنجز المهمة، وولي الأمر يوافق";
+    $("rule").innerHTML = "<b>تذكير:</b> حمل الطعام والصحون إلى المطبخ مهمة مشتركة على الجميع دائماً، وبعدها " +
+      (girls ? "تمسح صاحبة الدور" : "يمسح صاحب الدور") + " الطاولة.";
+
+    if (!kidById(state.kidId)) state.kidId = null;
+    if (!taskById(state.taskId)) state.taskId = null;
+    $("names").innerHTML = c.kids.map(function (k) {
+      return '<button class="choice' + (k.id === state.kidId ? " on" : "") + '" style="--c:' + k.color + '" data-pick="kidId" data-val="' + esc(k.id) + '">' + k.icon + " " + esc(k.name) + "</button>";
+    }).join("");
+    $("meals").innerHTML = c.tasks.map(function (t) {
+      return '<button class="choice' + (t.id === state.taskId ? " on" : "") + '" style="--c:' + taskColor(t) + '" data-pick="taskId" data-val="' + esc(t.id) + '">' + t.icon + " " + esc(t.name) +
+        "<small>" + t.points + " " + ptsWord(t.points) + "</small></button>";
+    }).join("");
+    $("tables").innerHTML = c.tasks.map(function (t, i) {
+      return '<section class="card task-card" style="--c:' + taskColor(t) + '"><h2>' + t.icon + " " + esc(t.name) + "</h2>" +
+        '<table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-' + i + '"></tbody></table></section>';
+    }).join("");
+  }
+
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-pick]");
+    if (!b) return;
+    state[b.dataset.pick] = b.dataset.val;
+    Array.prototype.forEach.call(b.parentNode.children, function (x) { x.classList.toggle("on", x === b); });
+  });
+
+  function addDays(iso, n) { var d = toDate(iso); d.setDate(d.getDate() + n); return toISO(d); }
+  function render() {
+    var from = addDays(todayISO(), -SHOW_DAYS);
+    state.config.tasks.forEach(function (t, i) {
+      var body = $("t-" + i);
+      if (!body) return;
+      var rows = state.entries.filter(function (e) { return e.taskId === t.id && kidById(e.kidId) && e.date >= from; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+      body.innerHTML = rows.length ? rows.map(function (e) {
+        var status = e.approved
+          ? '<span class="badge ok">✔ تمت الموافقة</span>'
+          : '<span class="badge wait">بانتظار</span><br><button class="mini" data-act="approve" data-id="' + esc(e.id) + '">موافقة</button>';
+        return "<tr><td class='date'>" + showDate(e.date) + "</td><td>" + dayName(e.date) + "</td><td><b>" + esc(kidById(e.kidId).name) +
+          "</b></td><td>" + status + ' <button class="mini del" data-act="delete" data-id="' + esc(e.id) + '">حذف</button></td></tr>';
+      }).join("") : '<tr><td colspan="4" class="empty">لا يوجد تسجيلات بعد</td></tr>';
+    });
+  }
+
+  // ===== تسجيل مهمة =====
+  $("submit").onclick = function () {
+    var date = $("date").value, kid = kidById(state.kidId), task = taskById(state.taskId);
+    if (!kid) return flash("اختر اسمك أولاً", false);
+    if (!date) return flash("اختر التاريخ", false);
+    if (!task) return flash("اختر المهمة", false);
+    var btn = this; btn.disabled = true;
+    var data = { date: date, kidId: kid.id, taskId: task.id, approved: false, createdAt: serverTimestamp() };
+    var ref = doc(collection(state.familyRef, "entries"), task.repeat ? newId("e") : date + "_" + task.id);
+    runTransaction(db, function (tx) {
+      return tx.get(ref).then(function (s) {
+        if (s.exists()) throw new Error("taken");
+        tx.set(ref, data);
+      });
+    }).then(function () {
+      flash(G(kid, "أحسنتِ", "أحسنت") + " يا " + kid.name + "! 🌟 تم التسجيل وبانتظار موافقة ولي الأمر", true);
+    }).catch(function (e) {
+      flash(e.message === "taken" ? "هذه المهمة مسجلة مسبقاً في هذا التاريخ" : "تعذر الحفظ، حاول مرة أخرى", false);
+    }).then(function () { btn.disabled = false; });
+  };
+
+  // موافقة أو حذف
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-act]");
+    if (!b) return;
+    var act = b.dataset.act, ref = doc(state.familyRef, "entries", b.dataset.id);
+    requirePin(function () {
+      if (act === "approve") updateDoc(ref, { approved: true }).catch(onDbError);
+      else if (confirm("متأكد من حذف هذا التسجيل؟")) deleteDoc(ref).catch(onDbError);
+    });
+  });
+
+  // ===== لوحة الإنجاز والشارات والأبطال =====
+  function badgeList(kid) {
+    var list = [
+      { id: "first",   icon: "🌱", name: "البداية",         desc: "أول مهمة" },
+      { id: "week5",   icon: "⭐", name: G(kid, "نجمة الأسبوع", "نجم الأسبوع"), desc: "5 مهام في أسبوع" },
+      { id: "streak3", icon: "🔥", name: "سلسلة النار",     desc: "3 أيام متتالية" },
+      { id: "streak7", icon: "🚀", name: "لا تتوقف",        desc: "7 أيام متتالية" }
+    ];
+    state.config.tasks.forEach(function (t) {
+      list.push({ id: "task:" + t.id, taskId: t.id, icon: t.icon, name: G(kid, "بطلة ", "بطل ") + t.name, desc: "10 مرات " + t.name });
+    });
+    list.push({ id: "p100",  icon: "💯", name: "المئة", desc: "100 نقطة" });
+    list.push({ id: "champ", icon: "🏆", name: G(kid, "بطلة الشهر", "بطل الشهر"), desc: "الفوز بلقب الشهر" });
+    return list;
+  }
+
+  function toDate(iso) { var p = iso.split("-"); return new Date(+p[0], p[1] - 1, +p[2]); }
+  function toISO(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function weekStart(iso) { return addDays(iso, -((toDate(iso).getDay() + 1) % 7)); } // الأسبوع من السبت إلى الجمعة
+  function monthLabel(m) { var p = m.split("-"); return MONTHS[p[1] - 1] + " " + p[0]; }
+  function nextMonthStart(m) { var p = m.split("-"); return toISO(new Date(+p[0], +p[1], 1)); }
+  function points(e) { var t = taskById(e.taskId); return t ? t.points : 0; }
+
+  function computeStats() {
+    var today = todayISO(), month = today.slice(0, 7), kids = state.config.kids;
+    var hist = state.entries.filter(function (e) { return e.approved && kidById(e.kidId); })
+      .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
+    // أبطال الأشهر المنتهية (عند التعادل يفوز الجميع)
+    var byMonth = {};
+    hist.forEach(function (e) {
+      var m = e.date.slice(0, 7);
+      if (m >= month) return;
+      byMonth[m] = byMonth[m] || {};
+      byMonth[m][e.kidId] = (byMonth[m][e.kidId] || 0) + points(e);
+    });
+    var champions = Object.keys(byMonth).sort().reverse().map(function (m) {
+      var max = Math.max.apply(null, kids.map(function (k) { return byMonth[m][k.id] || 0; }));
+      return { month: m, points: max, winners: max > 0 ? kids.filter(function (k) { return (byMonth[m][k.id] || 0) === max; }) : [] };
+    }).filter(function (c) { return c.winners.length; });
+
+    var stats = kids.map(function (kid) {
+      var list = hist.filter(function (e) { return e.kidId === kid.id; });
+      var badges = badgeList(kid);
+      var c = { total: 0, per: {}, weeks: {}, run: 0, last: null };
+      var earned = {};
+      function earn(id, date) { if (!earned[id]) earned[id] = date; }
+      list.forEach(function (e) {
+        if (e.date !== c.last) { c.run = c.last && addDays(c.last, 1) === e.date ? c.run + 1 : 1; c.last = e.date; }
+        c.total += points(e);
+        c.per[e.taskId] = (c.per[e.taskId] || 0) + 1;
+        var w = weekStart(e.date); c.weeks[w] = (c.weeks[w] || 0) + 1;
+        earn("first", e.date);
+        if (c.weeks[w] >= 5) earn("week5", e.date);
+        if (c.run >= 3) earn("streak3", e.date);
+        if (c.run >= 7) earn("streak7", e.date);
+        badges.forEach(function (b) { if (b.taskId === e.taskId && c.per[e.taskId] >= 10) earn(b.id, e.date); });
+        if (c.total >= 100) earn("p100", e.date);
+      });
+      var wins = champions.filter(function (ch) { return ch.winners.indexOf(kid) >= 0; });
+      if (wins.length) earn("champ", nextMonthStart(wins[wins.length - 1].month));
+
+      var days = {};
+      list.forEach(function (e) { days[e.date] = true; });
+      var d = days[today] ? today : addDays(today, -1), streak = 0;
+      while (days[d]) { streak++; d = addDays(d, -1); }
+
+      var latest = null;
+      badges.forEach(function (b) { if (earned[b.id] && (!latest || earned[b.id] >= earned[latest.id])) latest = b; });
+
+      return {
+        kid: kid, badges: badges, earned: earned, latest: latest, streak: streak, wins: wins.length,
+        monthPoints: list.filter(function (e) { return e.date.slice(0, 7) === month; })
+          .reduce(function (s, e) { return s + points(e); }, 0),
+        weekCount: c.weeks[weekStart(today)] || 0
+      };
+    });
+    var top = Math.max.apply(null, stats.map(function (k) { return k.monthPoints; }));
+    stats.forEach(function (k) { k.leader = top > 0 && k.monthPoints === top; });
+    return { month: month, kids: stats, champions: champions };
+  }
+
+  function renderAchievements() {
+    var st = computeStats(), goal = state.config.goal || 40, prizes = (state.family && state.family.prizes) || {};
+    $("month-name").textContent = monthLabel(st.month);
+    var prize = prizes[st.month];
+    $("prize-text").textContent = prize ? "🎁 جائزة بطل الشهر: " + prize : "🎁 جائزة بطل الشهر لم تُحدد بعد";
+
+    $("board").innerHTML = st.kids.map(function (s) {
+      var k = s.kid, pct = Math.min(100, Math.round(s.monthPoints / goal * 100)), left = goal - s.monthPoints;
+      var got = s.badges.filter(function (b) { return s.earned[b.id]; }).length;
+      return '<div class="kid" style="--c:' + k.color + '"><div class="kid-head"><span class="kname">' + k.icon + " " + esc(k.name) + '</span>' +
+        (s.leader ? '<span class="crown">👑 ' + G(k, "متصدرة", "متصدر") + ' الشهر</span>' : '') + '</div>' +
+        '<div class="pts"><b>' + s.monthPoints + '</b>نقطة هذا الشهر</div>' +
+        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="goal">' + (left > 0 ? s.monthPoints + ' / ' + goal + '، باقي ' + left + ' نقطة لهدف الشهر' : '🎯 ' + G(k, "حققتِ", "حققت") + ' هدف الشهر!') + '</div>' +
+        '<div class="stats"><div><b>' + s.weekCount + '</b><span>مهام هذا الأسبوع</span></div>' +
+        '<div><b>🔥 ' + s.streak + '</b><span>أيام متتالية</span></div>' +
+        '<div><b>' + got + '/' + s.badges.length + '</b><span>الشارات</span></div></div>' +
+        '<div class="last">' + (s.latest ? 'آخر شارة: ' + s.latest.icon + ' <b>' + esc(s.latest.name) + '</b>' : 'أول شارة تنتظرك 🌱') + '</div></div>';
+    }).join("");
+
+    $("badges").innerHTML = st.kids.map(function (s) {
+      return '<div class="kid-badges"><h3>' + s.kid.icon + " " + esc(s.kid.name) + '</h3><div class="stickers">' + s.badges.map(function (b) {
+        var got = !!s.earned[b.id];
+        var extra = b.id === "champ" && s.wins > 1 ? " ×" + s.wins : "";
+        return '<div class="sticker ' + (got ? "got" : "locked") + '"><div class="ic">' + b.icon + '</div>' +
+          '<div class="nm">' + (got ? "" : "🔒 ") + esc(b.name) + extra + '</div><div class="ds">' + esc(b.desc) + '</div></div>';
+      }).join("") + '</div></div>';
+    }).join("");
+
+    $("champs").innerHTML = st.champions.length ? st.champions.map(function (c) {
+      var pr = prizes[c.month];
+      return '<li><span>' + monthLabel(c.month) + '</span><span class="who">👑 ' + c.winners.map(function (k) { return esc(k.name); }).join(" و ") +
+        '</span><span>' + c.points + ' نقطة' + (pr ? ' · 🎁 ' + esc(pr) : '') + '</span></li>';
+    }).join("") : '<li class="empty">أول بطل يُعلن نهاية شهر ' + MONTHS[+st.month.slice(5) - 1] + ' 🏁</li>';
+
+    if (state.loaded && state.family) checkNewBadges(st);
+  }
+
+  // احتفال عند الحصول على شارة جديدة (يتذكر كل جهاز ما احتفل به)
+  function checkNewBadges(st) {
+    var now = [], names = {};
+    st.kids.forEach(function (s) {
+      s.badges.forEach(function (b) {
+        if (s.earned[b.id]) { var key = s.kid.id + "|" + b.id; now.push(key); names[key] = { kid: s.kid, badge: b }; }
+      });
+    });
+    var store = "seenBadges:" + state.user.uid, seen = null;
+    try { seen = JSON.parse(localStorage.getItem(store)); } catch (e) {}
+    try { localStorage.setItem(store, JSON.stringify(now)); } catch (e) {}
+    if (!seen) return;
+    var fresh = now.filter(function (x) { return seen.indexOf(x) < 0; });
+    if (!fresh.length) return;
+    var lines = fresh.map(function (x) {
+      var n = names[x];
+      return "مبروك يا " + n.kid.name + "! " + G(n.kid, "حصلتِ", "حصلت") + " على شارة " + n.badge.icon + " " + n.badge.name;
+    });
+    var more = lines.length > 3 ? "<br>و " + (lines.length - 3) + " شارات أخرى! 🌟" : "";
+    $("party-icon").textContent = names[fresh[0]].badge.icon;
+    $("party-text").innerHTML = lines.slice(0, 3).map(esc).join("<br>") + more;
+    if (!$("dlg-party").open) $("dlg-party").showModal();
+    confetti();
+  }
+  $("party-ok").onclick = function () { $("dlg-party").close(); };
+
+  function confetti() {
+    var cv = $("confetti"), ctx = cv.getContext("2d");
+    cv.width = innerWidth; cv.height = innerHeight;
+    var colors = ["#c2457d", "#7a4fa3", "#2b8a8a", "#f0c96a", "#e58fb5", "#5bc0eb"];
+    var parts = [];
+    for (var i = 0; i < 160; i++) parts.push({
+      x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .5,
+      w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, vy: 2 + Math.random() * 3,
+      vx: -1.5 + Math.random() * 3, r: Math.random() * 6, vr: -.2 + Math.random() * .4,
+      c: colors[i % colors.length]
+    });
+    var start = performance.now();
+    (function frame(t) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      parts.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      });
+      if (t - start < 4000) requestAnimationFrame(frame); else ctx.clearRect(0, 0, cv.width, cv.height);
+    })(start);
+  }
+
+  // ===== جائزة الشهر =====
+  $("prize-edit").onclick = function () {
+    requirePin(function () {
+      $("prize-input").value = ((state.family && state.family.prizes) || {})[todayISO().slice(0, 7)] || "";
+      $("dlg-prize").showModal(); $("prize-input").focus();
+    });
+  };
+  $("prize-no").onclick = function () { $("dlg-prize").close(); };
+  $("prize-yes").onclick = function () {
+    var text = $("prize-input").value.trim().slice(0, 100), patch = {};
+    patch["prizes." + todayISO().slice(0, 7)] = text || deleteField();
+    $("dlg-prize").close();
+    updateDoc(state.familyRef, patch).catch(onDbError);
+  };
+
+  // ===== إعدادات العائلة =====
+  var draft = null;
+  function cleanText(s, max) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, max); }
+  function validateConfig(c) {
+    var kids = c.kids.map(function (k) { return { id: k.id, name: cleanText(k.name, 20), gender: k.gender === "m" ? "m" : "f", color: k.color, icon: k.icon }; });
+    var tasks = c.tasks.map(function (t) { return { id: t.id, name: cleanText(t.name, 20), icon: t.icon, points: Math.max(1, Math.min(10, +t.points || 1)), repeat: !!t.repeat }; });
+    if (!kids.length) return "أضف طفلاً واحداً على الأقل";
+    if (!tasks.length) return "أضف مهمة واحدة على الأقل";
+    if (kids.concat(tasks).some(function (x) { return !x.name; })) return "اكتب كل الأسماء قبل الحفظ";
+    function dup(list) { var s = {}; return list.some(function (x) { if (s[x.name]) return true; s[x.name] = 1; return false; }); }
+    if (dup(kids)) return "يوجد اسم طفل مكرر";
+    if (dup(tasks)) return "يوجد اسم مهمة مكرر";
+    return { title: cleanText(c.title, 40) || "جدول الأبطال", goal: Math.max(5, Math.min(500, Math.round(+c.goal) || 40)), kids: kids, tasks: tasks };
+  }
+  function iconSelect(list, val) {
+    if (list.indexOf(val) < 0) list = [val].concat(list);
+    return '<select data-f="icon">' + list.map(function (i) { return "<option" + (i === val ? " selected" : "") + ">" + i + "</option>"; }).join("") + "</select>";
+  }
+  function renderSettings() {
+    $("set-kids").innerHTML = draft.kids.map(function (k, i) {
+      return '<div class="set-row kid-row" data-kind="kids" data-i="' + i + '">' + iconSelect(KID_ICONS, k.icon) +
+        '<input type="text" data-f="name" maxlength="20" placeholder="اسم الطفل" value="' + esc(k.name) + '">' +
+        '<select data-f="gender" class="third"><option value="f"' + (k.gender !== "m" ? " selected" : "") + '>بنت</option><option value="m"' + (k.gender === "m" ? " selected" : "") + '>ولد</option></select>' +
+        '<button class="x" data-del="kids" title="حذف">✕</button>' +
+        '<div class="swatches">' + KID_COLORS.map(function (col) {
+          return '<span class="sw' + (col === k.color ? " on" : "") + '" style="background:' + col + '" data-color="' + col + '"></span>';
+        }).join("") + "</div></div>";
+    }).join("");
+    $("set-tasks").innerHTML = draft.tasks.map(function (t, i) {
+      return '<div class="set-row task-row" data-kind="tasks" data-i="' + i + '">' + iconSelect(TASK_ICONS, t.icon) +
+        '<input type="text" data-f="name" maxlength="20" placeholder="اسم المهمة" value="' + esc(t.name) + '">' +
+        '<select data-f="points" class="third">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (p) {
+          return '<option value="' + p + '"' + (p === t.points ? " selected" : "") + ">" + p + " " + ptsWord(p) + "</option>";
+        }).join("") + "</select>" +
+        '<button class="x" data-del="tasks" title="حذف">✕</button>' +
+        '<label class="repeat"><input type="checkbox" data-f="repeat"' + (t.repeat ? " checked" : "") + '> يمكن تسجيلها أكثر من مرة في اليوم</label></div>';
+    }).join("");
+  }
+  function openSettings(welcome) {
+    draft = JSON.parse(JSON.stringify(state.family ? state.config : DEFAULT_CONFIG));
+    renderSettings();
+    show("welcome", !!welcome);
+    show("import-box", /[?&]import=1/.test(location.search));
+    $("set-title").value = draft.title || "جدول الأبطال";
+    $("set-goal").value = draft.goal || 40;
+    $("set-pin").value = "";
+    if (!$("dlg-settings").open) $("dlg-settings").showModal();
+  }
+  $("open-settings").onclick = function () { requirePin(function () { openSettings(false); }); };
+  function onSettingsEdit(ev) {
+    var row = ev.target.closest(".set-row"), f = ev.target.dataset.f;
+    if (!row || !f) return;
+    var item = draft[row.dataset.kind][+row.dataset.i];
+    item[f] = f === "repeat" ? ev.target.checked : f === "points" ? +ev.target.value : ev.target.value;
+  }
+  $("dlg-settings").addEventListener("input", onSettingsEdit);
+  $("dlg-settings").addEventListener("change", onSettingsEdit);
+  $("dlg-settings").addEventListener("click", function (ev) {
+    var row = ev.target.closest(".set-row");
+    if (ev.target.dataset.color && row) {
+      draft.kids[+row.dataset.i].color = ev.target.dataset.color; renderSettings();
+    } else if (ev.target.dataset.del && row) {
+      var list = draft[ev.target.dataset.del];
+      if (list.length < 2) return alert("يجب أن يبقى عنصر واحد على الأقل");
+      if (!confirm("حذف «" + (list[+row.dataset.i].name || "") + "»؟")) return;
+      list.splice(+row.dataset.i, 1); renderSettings();
+    }
+  });
+  $("add-kid").onclick = function () {
+    var n = draft.kids.length;
+    draft.kids.push({ id: newId("k"), name: "", gender: "f", color: KID_COLORS[n % KID_COLORS.length], icon: KID_ICONS[n % KID_ICONS.length] });
+    renderSettings();
+  };
+  $("add-task").onclick = function () {
+    draft.tasks.push({ id: newId("t"), name: "", icon: TASK_ICONS[draft.tasks.length % TASK_ICONS.length], points: 1, repeat: false });
+    renderSettings();
+  };
+  $("set-cancel").onclick = function () { $("dlg-settings").close(); };
+  $("set-save").onclick = function () {
+    draft.title = $("set-title").value;
+    draft.goal = $("set-goal").value;
+    var next = validateConfig(draft);
+    if (typeof next === "string") return alert(next);
+    var pin = cleanText($("set-pin").value, 12) || String((state.family && state.family.pin) || DEFAULT_PIN);
+    if (pin.length < 4) return alert("الرمز يجب أن يكون 4 أرقام أو أكثر");
+    updateDoc(state.familyRef, { config: next, pin: pin })
+      .then(function () { $("dlg-settings").close(); flash("تم حفظ الإعدادات ✅", true); })
+      .catch(function (e) { alert("تعذر الحفظ: " + (e.code || e.message)); });
+  };
+
+  // ===== استيراد البيانات القديمة من Google Sheet (مرة واحدة) =====
+  $("import-btn").onclick = function () {
+    if (!confirm("استيراد الإعدادات والتسجيلات من Google Sheet؟ سيستبدل إعدادات العائلة الحالية.")) return;
+    var btn = this; btn.disabled = true; btn.textContent = "⏳ جاري الاستيراد...";
+    fetch(OLD_API_URL).then(function (r) { return r.json(); }).then(function (old) {
+      var cfg = old.config;
+      function kidId(name) { var k = cfg.kids.filter(function (x) { return x.name === name; })[0]; return k && k.id; }
+      function task(name) { return cfg.tasks.filter(function (x) { return x.name === name; })[0]; }
+      var docs = {}, approvedLeft = {};
+      // كل التسجيلات الحالية (بانتظار أو موافق عليها)
+      old.entries.forEach(function (e) {
+        var t = task(e.meal), k = kidId(e.name);
+        if (!t || !k) return;
+        var id = t.repeat ? "e" + e.id.replace(/-/g, "").slice(0, 16) : e.date + "_" + t.id;
+        docs[id] = { date: e.date, kidId: k, taskId: t.id, approved: !!e.approved };
+        if (e.approved) { var key = e.date + "|" + e.meal + "|" + e.name; approvedLeft[key] = (approvedLeft[key] || 0) + 1; }
+      });
+      // السجل الدائم: ما ليس موجوداً في التسجيلات الحالية (أقدم من 45 يوماً)
+      old.history.forEach(function (h, i) {
+        var key = h.date + "|" + h.meal + "|" + h.name;
+        if (approvedLeft[key]) { approvedLeft[key]--; return; }
+        var t = task(h.meal), k = kidId(h.name);
+        if (!t || !k) return;
+        docs[t.repeat ? "h" + i + "_" + h.date : h.date + "_" + t.id] = { date: h.date, kidId: k, taskId: t.id, approved: true };
+      });
+      var batch = writeBatch(db);
+      batch.update(state.familyRef, { config: validateConfig(cfg), prizes: old.prizes || {} });
+      Object.keys(docs).forEach(function (id) {
+        var d = docs[id]; d.createdAt = serverTimestamp(); d.imported = true;
+        batch.set(doc(state.familyRef, "entries", id), d);
+      });
+      return batch.commit().then(function () {
+        $("dlg-settings").close();
+        flash("تم استيراد " + Object.keys(docs).length + " تسجيل والإعدادات ✅", true);
+        history.replaceState(null, "", location.pathname);
+      });
+    }).catch(function (e) { alert("تعذر الاستيراد: " + (e.code || e.message)); })
+      .then(function () { btn.disabled = false; btn.textContent = "استيراد التسجيلات والإعدادات القديمة"; });
+  };
+
+  $("date").value = todayISO();
+</script>
+</body>
+</html>

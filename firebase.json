@@ -1,0 +1,21 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*"
+    ]
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "جدول الأبطال",
+        "supportEmail": "nammous.zuhair@gmail.com",
+        "authorizedRedirectUris": []
+      }
+    }
+  }
+}

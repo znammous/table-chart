@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // كل عائلة معرّفها هو معرّف حساب ولي الأمر (uid)، ويمكن إضافة أولياء أمور آخرين في parents
+    function isParent(fid) {
+      return request.auth != null && (
+        request.auth.uid == fid ||
+        (exists(/databases/$(database)/documents/families/$(fid)) &&
+         request.auth.uid in get(/databases/$(database)/documents/families/$(fid)).data.get('parents', []))
+      );
+    }
+
+    match /families/{fid} {
+      allow read, write: if isParent(fid);
+      match /{sub=**} {
+        allow read, write: if isParent(fid);
+      }
+    }
+  }
+}
