@@ -329,7 +329,7 @@
   function toDate(iso) { var p = iso.split("-"); return new Date(+p[0], p[1] - 1, +p[2]); }
   function toISO(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function addDays(iso, n) { var d = toDate(iso); d.setDate(d.getDate() + n); return toISO(d); }
-  function weekStart(iso) { return addDays(iso, -toDate(iso).getDay()); } // الأسبوع يبدأ الأحد
+  function weekStart(iso) { return addDays(iso, -((toDate(iso).getDay() + 1) % 7)); } // الأسبوع من السبت إلى الجمعة
   function monthLabel(m) { var p = m.split("-"); return MONTHS[p[1] - 1] + " " + p[0]; }
   function nextMonthStart(m) { var p = m.split("-"); return toISO(new Date(+p[0], +p[1], 1)); }
 
