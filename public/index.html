@@ -129,6 +129,12 @@
   .hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
   @media (max-width: 520px) { .set-row.kid-row, .set-row.task-row { grid-template-columns: 70px 1fr 40px; } .set-row .third { grid-column: 1 / -1; } }
   .hide { display: none !important; }
+  .turns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .turn-chip { flex: 1 1 150px; border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 8%, #fff); border-radius: 14px; padding: 8px 10px; text-align: center; }
+  .turn-chip .tk { font-size: 13px; color: var(--muted); }
+  .turn-chip .who { font-size: 19px; font-weight: bold; color: var(--kc, var(--ink)); }
+  .turn-line { margin: -6px 0 12px; font-size: 15px; }
+  .turn-line b { color: var(--kc, var(--ink)); }
   .login { text-align: center; max-width: 520px; margin: 30px auto; }
   .login .big { font-size: 64px; }
   .login p { color: var(--muted); line-height: 1.7; }
@@ -166,6 +172,9 @@
     <section class="card">
       <h2>✍️ تسجيل جديد</h2>
       <div class="rule" id="rule"></div>
+
+      <div class="label">🔄 الدور القادم</div>
+      <div class="turns" id="turns"></div>
 
       <div class="label">اسمي</div>
       <div class="choices" id="names"></div>
@@ -389,10 +398,11 @@
     }).join("");
     $("meals").innerHTML = c.tasks.map(function (t) {
       return '<button class="choice' + (t.id === state.taskId ? " on" : "") + '" style="--c:' + taskColor(t) + '" data-pick="taskId" data-val="' + esc(t.id) + '">' + t.icon + " " + esc(t.name) +
-        "<small>" + t.points + " " + ptsWord(t.points) + "</small></button>";
+        "<small>" + t.points + " " + ptsWord(t.points) + ' · <span data-turn-of="' + esc(t.id) + '"></span></small></button>';
     }).join("");
     $("tables").innerHTML = c.tasks.map(function (t, i) {
       return '<section class="card task-card" style="--c:' + taskColor(t) + '"><h2>' + t.icon + " " + esc(t.name) + "</h2>" +
+        '<div class="turn-line" id="turn-' + i + '"></div>' +
         '<table><thead><tr><th>التاريخ</th><th>اليوم</th><th>الاسم</th><th>ولي الأمر</th></tr></thead><tbody id="t-' + i + '"></tbody></table></section>';
     }).join("");
   }
@@ -405,8 +415,45 @@
   });
 
   function addDays(iso, n) { var d = toDate(iso); d.setDate(d.getDate() + n); return toISO(d); }
+  // الدور القادم: الأقل تنفيذاً للمهمة في آخر 30 يوماً، وعند التساوي من نفّذها منذ أطول مدة
+  var TURN_DAYS = 30;
+  function nextTurn(task) {
+    var kids = state.config.kids;
+    if (kids.length < 2) return kids[0];
+    var from = addDays(todayISO(), -TURN_DAYS), count = {}, last = {};
+    state.entries.forEach(function (e) {
+      if (e.taskId !== task.id || !kidById(e.kidId)) return;
+      if (e.date >= from) count[e.kidId] = (count[e.kidId] || 0) + 1;
+      if (!last[e.kidId] || e.date > last[e.kidId]) last[e.kidId] = e.date;
+    });
+    return kids.slice().sort(function (a, b) {
+      var ca = count[a.id] || 0, cb = count[b.id] || 0;
+      if (ca !== cb) return ca - cb;
+      var la = last[a.id] || "", lb = last[b.id] || "";
+      if (la !== lb) return la < lb ? -1 : 1;
+      return kids.indexOf(a) - kids.indexOf(b);
+    })[0];
+  }
+
+  function renderTurns() {
+    var tasks = state.config.tasks;
+    $("turns").innerHTML = tasks.map(function (t) {
+      var k = nextTurn(t);
+      return '<div class="turn-chip" style="--c:' + taskColor(t) + ';--kc:' + (k ? k.color : "inherit") + '"><div class="tk">' + t.icon + " " + esc(t.name) +
+        '</div><div class="who">' + (k ? k.icon + " " + esc(k.name) : "—") + '</div></div>';
+    }).join("");
+    tasks.forEach(function (t, i) {
+      var k = nextTurn(t), line = $("turn-" + i);
+      if (line) line.innerHTML = k ? '🔄 الدور القادم: <b style="--kc:' + k.color + '">' + k.icon + " " + esc(k.name) + "</b>" : "";
+      Array.prototype.forEach.call(document.querySelectorAll('[data-turn-of="' + t.id + '"]'), function (el) {
+        el.textContent = k ? "الدور: " + k.name : "";
+      });
+    });
+  }
+
   function render() {
     var from = addDays(todayISO(), -SHOW_DAYS);
+    renderTurns();
     state.config.tasks.forEach(function (t, i) {
       var body = $("t-" + i);
       if (!body) return;
